@@ -121,7 +121,6 @@ export async function getLoggedInUser() {
     const accessToken = cookieStore.get("access_token")?.value;
 
     if (!accessToken) {
-      console.log("No access token found. User is not logged in.");
       return null;
     }
 

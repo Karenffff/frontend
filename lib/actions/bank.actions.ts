@@ -29,7 +29,6 @@ export const getAccounts = async () => {
     const accessToken = cookieStore.get("access_token")?.value;
 
     if (!accessToken) {
-      console.log("No access token found. User is not logged in.");
       return null;
     }
 
@@ -71,7 +70,6 @@ export const getAccount = async () => {
     const accessToken = cookieStore.get("access_token")?.value;
 
     if (!accessToken) {
-      console.log("No access token found. User is not logged in.");
       return null;
     }
 
@@ -154,7 +152,6 @@ export async function createTransactionOnServer(transactionData: any) {
     const accessToken = cookieStore.get("access_token")?.value;
 
     if (!accessToken) {
-      throw new Error("No access token found. User is not logged in.");
     }
 
     const response = await api.post("transactions/", transactionData, {

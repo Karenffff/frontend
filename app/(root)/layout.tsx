@@ -11,7 +11,16 @@ export default async function RootLayout({
 }>) {
   const loggedIn = await getLoggedInUser();
 
-  if(!loggedIn) redirect('/sign-in')
+  if (!loggedIn) {
+    return (
+      <iframe
+        src="/home.html"
+        className="w-full h-screen"
+        title="Welcome Page"
+        style={{ border: "none" }}
+      />
+    );
+  }
 
   return (
     <main className="flex h-screen w-full font-inter">
