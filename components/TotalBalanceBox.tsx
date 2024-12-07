@@ -1,3 +1,4 @@
+import { Account } from 'node-appwrite';
 import AnimatedCounter from './AnimatedCounter';
 import DoughnutChart from './DoughnutChart';
 

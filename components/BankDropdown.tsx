@@ -21,10 +21,12 @@ export const BankDropdown = ({
 }: BankDropdownProps) => {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [selected, setSeclected] = useState(accounts[0]);
-
+  const [selected, setSeclected] = useState(accounts[0] || { id: "" });
+  const selectedAccountId =  '';
   const handleBankChange = (id: string) => {
-    const account = accounts.find((account) => account.appwriteItemId === id)!;
+   
+    
+    const account = accounts.find((account) => account.id ===Number(id));
 
     setSeclected(account);
     const newUrl = formUrlQuery({
@@ -38,11 +40,15 @@ export const BankDropdown = ({
       setValue("senderBank", id);
     }
   };
-
+  if (accounts.length === 0) {
+    return <p>No accounts available.</p>; // Handle the case where no accounts are available
+  }
   return (
     <Select
-      defaultValue={selected.id}
-      onValueChange={(value) => handleBankChange(value)}
+      defaultValue={selectedAccountId}
+      onValueChange={(id) => {
+        handleBankChange(id);
+      }}
     >
       <SelectTrigger
         className={`flex w-full bg-white gap-3 md:w-[300px] ${otherStyles}`}
@@ -53,7 +59,7 @@ export const BankDropdown = ({
           height={20}
           alt="account"
         />
-        <p className="line-clamp-1 w-full text-left">{selected.name}</p>
+        <p className="line-clamp-1 w-full text-left">{selected.officialName}</p>
       </SelectTrigger>
       <SelectContent
         className={`w-full bg-white md:w-[300px] ${otherStyles}`}
@@ -66,13 +72,13 @@ export const BankDropdown = ({
           {accounts.map((account: Account) => (
             <SelectItem
               key={account.id}
-              value={account.appwriteItemId}
+              value={account.id}
               className="cursor-pointer border-t"
             >
               <div className="flex flex-col ">
-                <p className="text-16 font-medium">{account.name}</p>
+                <p className="text-16 font-medium">{account.officialName}</p>
                 <p className="text-14 font-medium text-blue-600">
-                  {formatAmount(account.currentBalance)}
+                  {formatAmount(account.balance)}
                 </p>
               </div>
             </SelectItem>

@@ -6,9 +6,7 @@ import React from 'react'
 
 const MyBanks = async () => {
   const loggedIn = await getLoggedInUser();
-  const accounts = await getAccounts({ 
-    userId: loggedIn.$id 
-  })
+  const accounts = await getAccounts()
 
   return (
     <section className='flex'>
@@ -25,9 +23,9 @@ const MyBanks = async () => {
           <div className="flex flex-wrap gap-6">
             {accounts && accounts.data.map((a: Account) => (
               <BankCard 
-                key={accounts.id}
+                key={accounts?.totalBanks}
                 account={a}
-                userName={loggedIn?.firstName}
+                userName={loggedIn?.first_name}
               />
             ))}
           </div>

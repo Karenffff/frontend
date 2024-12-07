@@ -31,8 +31,8 @@ declare type User = {
   userId: string;
   dwollaCustomerUrl: string;
   dwollaCustomerId: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   name: string;
   address1: string;
   city: string;
@@ -51,13 +51,13 @@ declare type NewUserParams = {
 
 declare type Account = {
   id: string;
-  availableBalance: number;
+  balance: number;
   currentBalance: number;
   officialName: string;
-  mask: string;
-  institutionId: string;
+  account_number:string
+  routing_number: string;
   name: string;
-  type: string;
+  account_type: string;
   subtype: string;
   appwriteItemId: string;
   shareableId: string;
@@ -83,7 +83,7 @@ declare type Transaction = {
 };
 
 declare type Bank = {
-  $id: string;
+  id: string;
   accountId: string;
   bankId: string;
   accessToken: string;
@@ -145,7 +145,7 @@ declare interface CreditCardProps {
 
 declare interface BankInfoProps {
   account: Account;
-  appwriteItemId?: string;
+  firstAccountId?: string;
   type: "full" | "card";
 }
 
@@ -227,7 +227,6 @@ declare interface SiderbarProps {
 declare interface RecentTransactionsProps {
   accounts: Account[];
   transactions: Transaction[];
-  appwriteItemId: string;
   page: number;
 }
 
@@ -262,7 +261,7 @@ declare interface getAccountsProps {
 }
 
 declare interface getAccountProps {
-  appwriteItemId: string;
+  id: string;
 }
 
 declare interface getInstitutionProps {

@@ -9,16 +9,15 @@ import React from 'react'
 const TransactionHistory = async ({ searchParams: { id, page }}:SearchParamProps) => {
   const currentPage = Number(page as string) || 1;
   const loggedIn = await getLoggedInUser();
-  const accounts = await getAccounts({ 
-    userId: loggedIn.$id 
-  })
+  const accounts = await getAccounts()
 
   if(!accounts) return;
   
   const accountsData = accounts?.data;
-  const appwriteItemId = (id as string) || accountsData[0]?.appwriteItemId;
+  const firstAccountId = accountsData && accountsData.length > 0 ? accountsData[0]?.id : null;
 
-  const account = await getAccount({ appwriteItemId })
+  // Fetch details of the first account if the ID is present
+  const account = firstAccountId ? await getAccount() : { transactions: [] }; 
 
 
 const rowsPerPage = 10;
@@ -42,18 +41,18 @@ const currentTransactions = account?.transactions.slice(
       <div className="space-y-6">
         <div className="transactions-account">
           <div className="flex flex-col gap-2">
-            <h2 className="text-18 font-bold text-white">{account?.data.name}</h2>
+            <h2 className="text-18 font-bold text-white">{account?.officialName}</h2>
             <p className="text-14 text-blue-25">
-              {account?.data.officialName}
+              {account?.officialName}
             </p>
             <p className="text-14 font-semibold tracking-[1.1px] text-white">
-              ●●●● ●●●● ●●●● {account?.data.mask}
+              ●●●● ●●●● ●●●● {account?.mask}
             </p>
           </div>
           
           <div className='transactions-account-balance'>
             <p className="text-14">Current balance</p>
-            <p className="text-24 text-center font-bold">{formatAmount(account?.data.currentBalance)}</p>
+            <p className="text-24 text-center font-bold">{formatAmount(account.balance)}</p>
           </div>
         </div>
 

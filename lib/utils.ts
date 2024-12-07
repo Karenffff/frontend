@@ -187,13 +187,13 @@ export function decryptId(id: string) {
   return atob(id);
 }
 
-export const getTransactionStatus = (date: Date) => {
-  const today = new Date();
-  const twoDaysAgo = new Date(today);
-  twoDaysAgo.setDate(today.getDate() - 2);
+// export const getTransactionStatus = (date: Date) => {
+//   const today = new Date();
+//   const twoDaysAgo = new Date(today);
+//   twoDaysAgo.setDate(today.getDate() - 2);
 
-  return date > twoDaysAgo ? "Processing" : "Success";
-};
+//   return date > twoDaysAgo ? "Processing" : "Success";
+// };
 
 export const authFormSchema = (type: string) => z.object({
   // sign up

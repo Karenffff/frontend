@@ -6,12 +6,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-
-import { createTransfer } from "@/lib/actions/dwolla.actions";
 import { createTransaction } from "@/lib/actions/transaction.actions";
 import { getBank, getBankByAccountId } from "@/lib/actions/user.actions";
 import { decryptId } from "@/lib/utils";
-
+import { createTransactionOnServer } from "@/lib/actions/bank.actions";
 import { BankDropdown } from "./BankDropdown";
 import { Button } from "./ui/button";
 import {
@@ -29,9 +27,10 @@ import { Textarea } from "./ui/textarea";
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
   name: z.string().min(4, "Transfer note is too short"),
-  amount: z.string().min(4, "Amount is too short"),
-  senderBank: z.string().min(4, "Please select a valid bank account"),
-  sharableId: z.string().min(8, "Please select a valid sharable Id"),
+  amount: z.string().min(1, "Amount is too short"),
+  senderBank: z.string().min(1, "Please select a valid bank account"),
+  acct: z.string().min(10, "Please enter a valid account number"),
+  routing: z.string().min(9, "Please enter a valid routing number"),
 });
 
 const PaymentTransferForm = ({ accounts }: PaymentTransferFormProps) => {
@@ -45,53 +44,50 @@ const PaymentTransferForm = ({ accounts }: PaymentTransferFormProps) => {
       email: "",
       amount: "",
       senderBank: "",
-      sharableId: "",
+      acct: "",
+      routing: "",
     },
   });
 
   const submit = async (data: z.infer<typeof formSchema>) => {
     setIsLoading(true);
-
+    
+  
     try {
-      const receiverAccountId = decryptId(data.sharableId);
-      const receiverBank = await getBankByAccountId({
-        accountId: receiverAccountId,
-      });
-      const senderBank = await getBank({ documentId: data.senderBank });
-
-      const transferParams = {
-        sourceFundingSourceUrl: senderBank.fundingSourceUrl,
-        destinationFundingSourceUrl: receiverBank.fundingSourceUrl,
-        amount: data.amount,
+      const transactionData = {
+        account: Number(data.senderBank),
+        transaction_type: "DEBIT",
+        amount: parseFloat(data.amount),
+        title: data.name,
+        description: data.name,
       };
-      // create transfer
-      const transfer = await createTransfer(transferParams);
-
-      // create transfer transaction
-      if (transfer) {
-        const transaction = {
-          name: data.name,
-          amount: data.amount,
-          senderId: senderBank.userId.$id,
-          senderBankId: senderBank.$id,
-          receiverId: receiverBank.userId.$id,
-          receiverBankId: receiverBank.$id,
-          email: data.email,
-        };
-
-        const newTransaction = await createTransaction(transaction);
-
-        if (newTransaction) {
-          form.reset();
-          router.push("/");
-        }
+      const newTransaction = await createTransactionOnServer(transactionData);
+  
+      if (newTransaction) {
+        console.log("Transaction successfully created:", newTransaction);
+        form.reset();
+        router.push("/");
       }
     } catch (error) {
-      console.error("Submitting create transfer request failed: ", error);
+      console.error("Error submitting transaction:", error);
+      if (error.response && error.response.data) {
+        // Assuming the backend returns an error in 'response.data.error'
+        const errorMessage = error.response.data.error || "Something went wrong, please try again.";
+        form.setError("amount", {
+          type: "manual",
+          message: errorMessage,
+        });
+      } else {
+        form.setError("amount", {
+          type: "manual",
+          message: "An unexpected error occurred.",
+        });
+      }
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
+  
 
   return (
     <Form {...form}>
@@ -190,17 +186,40 @@ const PaymentTransferForm = ({ accounts }: PaymentTransferFormProps) => {
 
         <FormField
           control={form.control}
-          name="sharableId"
+          name="acct"
           render={({ field }) => (
             <FormItem className="border-t border-gray-200">
               <div className="payment-transfer_form-item pb-5 pt-6">
                 <FormLabel className="text-14 w-full max-w-[280px] font-medium text-gray-700">
-                  Receiver&apos;s Plaid Sharable Id
+                  Receiver&apos;s account number
                 </FormLabel>
                 <div className="flex w-full flex-col">
                   <FormControl>
                     <Input
-                      placeholder="Enter the public account number"
+                      placeholder="Enter the  account number"
+                      className="input-class"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-12 text-red-500" />
+                </div>
+              </div>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="routing"
+          render={({ field }) => (
+            <FormItem className="border-t border-gray-200">
+              <div className="payment-transfer_form-item pb-5 pt-6">
+                <FormLabel className="text-14 w-full max-w-[280px] font-medium text-gray-700">
+                  Receiver&apos;s routing number
+                </FormLabel>
+                <div className="flex w-full flex-col">
+                  <FormControl>
+                    <Input
+                      placeholder="Enter the routing number"
                       className="input-class"
                       {...field}
                     />

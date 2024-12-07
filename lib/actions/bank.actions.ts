@@ -1,4 +1,7 @@
 "use server";
+import api from '../axiosInstance';
+import { cookies } from 'next/headers';
+
 
 import {
   ACHClass,
@@ -15,136 +18,97 @@ import { parseStringify } from "../utils";
 import { getTransactionsByBankId } from "./transaction.actions";
 import { getBanks, getBank } from "./user.actions";
 
+
+
+
 // Get multiple bank accounts
-export const getAccounts = async ({ userId }: getAccountsProps) => {
+export const getAccounts = async () => {
   try {
-    // get banks from db
-    const banks = await getBanks({ userId });
+    // Access the cookies on the server
+    const cookieStore = cookies();
+    const accessToken = cookieStore.get("access_token")?.value;
 
-    const accounts = await Promise.all(
-      banks?.map(async (bank: Bank) => {
-        // get each account info from plaid
-        const accountsResponse = await plaidClient.accountsGet({
-          access_token: bank.accessToken,
-        });
-        const accountData = accountsResponse.data.accounts[0];
+    if (!accessToken) {
+      console.log("No access token found. User is not logged in.");
+      return null;
+    }
 
-        // get institution info from plaid
-        const institution = await getInstitution({
-          institutionId: accountsResponse.data.item.institution_id!,
-        });
+    // Call Django's profile endpoint with the access token
+    // const profileResponse = await api.get('/profile/', {
+    //   headers: {
+    //     Authorization: `Bearer ${accessToken}`,
+    //   },
+    // });
 
-        const account = {
-          id: accountData.account_id,
-          availableBalance: accountData.balances.available!,
-          currentBalance: accountData.balances.current!,
-          institutionId: institution.institution_id,
-          name: accountData.name,
-          officialName: accountData.official_name,
-          mask: accountData.mask!,
-          type: accountData.type as string,
-          subtype: accountData.subtype! as string,
-          appwriteItemId: bank.$id,
-          sharaebleId: bank.shareableId,
-        };
+    // Fetch accounts
+    const accountsResponse = await api.get(`/accounts/`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
 
-        return account;
-      })
-    );
+    const accounts = accountsResponse.data;
 
     const totalBanks = accounts.length;
-    const totalCurrentBalance = accounts.reduce((total, account) => {
-      return total + account.currentBalance;
+    const totalCurrentBalance = accounts.reduce((total: number, account: any) => {
+      const balance = parseFloat(account.balance || 0);
+      return total + balance;
+       // Assuming backend returns `current_balance`
     }, 0);
 
-    return parseStringify({ data: accounts, totalBanks, totalCurrentBalance });
+    return { data: accounts, totalBanks, totalCurrentBalance };
   } catch (error) {
-    console.error("An error occurred while getting the accounts:", error);
+    console.error('An error occurred while getting the accounts:', error);
+    throw error;
   }
 };
+
 
 // Get one bank account
-export const getAccount = async ({ appwriteItemId }: getAccountProps) => {
+export const getAccount = async () => {
   try {
-    // get bank from db
-    const bank = await getBank({ documentId: appwriteItemId });
+    const cookieStore = cookies();
+    const accessToken = cookieStore.get("access_token")?.value;
 
-    // get account info from plaid
-    const accountsResponse = await plaidClient.accountsGet({
-      access_token: bank.accessToken,
-    });
-    const accountData = accountsResponse.data.accounts[0];
+    if (!accessToken) {
+      console.log("No access token found. User is not logged in.");
+      return null;
+    }
 
-    // get transfer transactions from appwrite
-    const transferTransactionsData = await getTransactionsByBankId({
-      bankId: bank.$id,
-    });
-
-    const transferTransactions = transferTransactionsData.documents.map(
-      (transferData: Transaction) => ({
-        id: transferData.$id,
-        name: transferData.name!,
-        amount: transferData.amount!,
-        date: transferData.$createdAt,
-        paymentChannel: transferData.channel,
-        category: transferData.category,
-        type: transferData.senderBankId === bank.$id ? "debit" : "credit",
-      })
-    );
-
-    // get institution info from plaid
-    const institution = await getInstitution({
-      institutionId: accountsResponse.data.item.institution_id!,
+    // Fetch data from the backend
+    const response = await api.get(`transactions/`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
     });
 
-    const transactions = await getTransactions({
-      accessToken: bank?.accessToken,
+    const transactionsData = response.data;
+
+    // Map and expand transactions into a proper format
+    const transactions = transactionsData.flatMap((transaction: any) => {
+      const { account_id, account_name, data } = transaction;
+
+      // Create a flattened list of transactions
+      return data.map((item: any) => ({
+        id: item.id,
+        name: item.title,
+        paymentChannel: item.payment_channel,
+        type: item.transaction_type,
+        accountId: account_id,
+        amount: item.amount,
+        status: item.status,
+        category: item.category ? item.category[0] : "",
+        date: item.date,
+      }));
     });
 
-    const account = {
-      id: accountData.account_id,
-      availableBalance: accountData.balances.available!,
-      currentBalance: accountData.balances.current!,
-      institutionId: institution.institution_id,
-      name: accountData.name,
-      officialName: accountData.official_name,
-      mask: accountData.mask!,
-      type: accountData.type as string,
-      subtype: accountData.subtype! as string,
-      appwriteItemId: bank.$id,
-    };
-
-    // sort transactions by date such that the most recent transaction is first
-      const allTransactions = [...transactions, ...transferTransactions].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-
-    return parseStringify({
-      data: account,
-      transactions: allTransactions,
-    });
+    return { transactions }; // Return an object with a transactions key
   } catch (error) {
     console.error("An error occurred while getting the account:", error);
+    throw error;
   }
 };
 
-// Get bank info
-export const getInstitution = async ({
-  institutionId,
-}: getInstitutionProps) => {
-  try {
-    const institutionResponse = await plaidClient.institutionsGetById({
-      institution_id: institutionId,
-      country_codes: ["US"] as CountryCode[],
-    });
-
-    const intitution = institutionResponse.data.institution;
-
-    return parseStringify(intitution);
-  } catch (error) {
-    console.error("An error occurred while getting the accounts:", error);
-  }
-};
 
 // Get transactions
 export const getTransactions = async ({
@@ -183,3 +147,25 @@ export const getTransactions = async ({
     console.error("An error occurred while getting the accounts:", error);
   }
 };
+
+export async function createTransactionOnServer(transactionData: any) {
+  try {
+    const cookieStore = cookies();
+    const accessToken = cookieStore.get("access_token")?.value;
+
+    if (!accessToken) {
+      throw new Error("No access token found. User is not logged in.");
+    }
+
+    const response = await api.post("transactions/", transactionData, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error creating transaction on server:", error);
+    throw error;
+  }
+}

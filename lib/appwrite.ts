@@ -38,6 +38,7 @@ export async function createAdminClient() {
     },
     get user() {
       return new Users(client);
+      
     }
   };
 }

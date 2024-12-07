@@ -3,12 +3,13 @@
 import { ID, Query } from "node-appwrite";
 import { createAdminClient, createSessionClient } from "../appwrite";
 import { cookies } from "next/headers";
+import api from '../axiosInstance';
 import { encryptId, extractCustomerIdFromUrl, parseStringify } from "../utils";
 import { CountryCode, ProcessorTokenCreateRequest, ProcessorTokenCreateRequestProcessorEnum, Products } from "plaid";
-
+import { redirect } from "next/navigation";
 import { plaidClient } from '@/lib/plaid';
 import { revalidatePath } from "next/cache";
-import { addFundingSource, createDwollaCustomer } from "./dwolla.actions";
+// import { addFundingSource, createDwollaCustomer } from "./dwolla.actions";
 
 const {
   APPWRITE_DATABASE_ID: DATABASE_ID,
@@ -34,102 +35,123 @@ export const getUserInfo = async ({ userId }: getUserInfoProps) => {
 
 export const signIn = async ({ email, password }: signInProps) => {
   try {
-    const { account } = await createAdminClient();
-    const session = await account.createEmailPasswordSession(email, password);
+    // Step 1: Authenticate user with DRF login endpoint
+    const loginResponse = await api.post('/login/', {
+      email,
+      password,
+    });
 
-    cookies().set("appwrite-session", session.secret, {
+    if (!loginResponse.data || !loginResponse.data.access) {
+      throw new Error('Invalid login credentials.');
+    }
+
+    const { access, refresh } = loginResponse.data;
+
+    // Step 2: Save tokens in server cookies
+    cookies().set("access_token", access, {
       path: "/",
       httpOnly: true,
       sameSite: "strict",
       secure: true,
     });
 
-    const user = await getUserInfo({ userId: session.userId }) 
+    cookies().set("refresh_token", refresh, {
+      path: "/",
+      httpOnly: true,
+      sameSite: "strict",
+      secure: true,
+    });
 
-    return parseStringify(user);
-  } catch (error) {
-    console.error('Error', error);
+    // Step 3: Retrieve user information from DRF profile endpoint
+    const profileResponse = await api.get('/profile/', {
+      headers: {
+        Authorization: `Bearer ${access}`,
+      },
+    });
+
+    const user = profileResponse.data;
+
+    console.log("User signed in successfully:", user);
+    return user;
+  } catch (error: any) {
+    console.error("Error during sign-in:", error.response?.data || error.message);
+    throw error; // Re-throw error for higher-level handling
   }
-}
+};
 
 export const signUp = async ({ password, ...userData }: SignUpParams) => {
-  const { email, firstName, lastName } = userData;
-  
-  let newUserAccount;
+  const { email, firstName, lastName, address1, city, state, postalCode, dateOfBirth, ssn } = userData;
+
 
   try {
-    const { account, database } = await createAdminClient();
-
-    newUserAccount = await account.create(
-      ID.unique(), 
-      email, 
-      password, 
-      `${firstName} ${lastName}`
-    );
-
-    if(!newUserAccount) throw new Error('Error creating user')
-
-    const dwollaCustomerUrl = await createDwollaCustomer({
-      ...userData,
-      type: 'personal'
-    })
-
-    if(!dwollaCustomerUrl) throw new Error('Error creating Dwolla customer')
-
-    const dwollaCustomerId = extractCustomerIdFromUrl(dwollaCustomerUrl);
-
-    const newUser = await database.createDocument(
-      DATABASE_ID!,
-      USER_COLLECTION_ID!,
-      ID.unique(),
-      {
-        ...userData,
-        userId: newUserAccount.$id,
-        dwollaCustomerId,
-        dwollaCustomerUrl
-      }
-    )
-
-    const session = await account.createEmailPasswordSession(email, password);
-
-    cookies().set("appwrite-session", session.secret, {
-      path: "/",
-      httpOnly: true,
-      sameSite: "strict",
-      secure: true,
+    // Step 1: Register the user
+    const userResponse = await api.post('/register/', {
+      email,
+      password,
+      first_name: firstName,
+      last_name: lastName,
+      address: address1,
+      city,
+      state,
+      postal_code: postalCode,
+      dob :dateOfBirth,
+      ssn,
     });
 
-    return parseStringify(newUser);
+
+    
+
+    if (!userResponse.data || !userResponse.data.user) {
+      throw new Error('Error creating user.');
+    }
+
+
+   redirect("/sign-in"); // Assuming "/sign-in" is your login page route
+    return { newUser: userResponse.data.user };
   } catch (error) {
-    console.error('Error', error);
+    console.error('Error during sign-up:', error);
+    throw error;
   }
-}
+};
 
 export async function getLoggedInUser() {
   try {
-    const { account } = await createSessionClient();
-    const result = await account.get();
+    // Access the cookies on the server
+    const cookieStore = cookies();
+    const accessToken = cookieStore.get("access_token")?.value;
 
-    const user = await getUserInfo({ userId: result.$id})
+    if (!accessToken) {
+      console.log("No access token found. User is not logged in.");
+      return null;
+    }
 
-    return parseStringify(user);
-  } catch (error) {
-    console.log(error)
+    // Call Django's profile endpoint with the access token
+    const response = await api.get('/profile/', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const user = response.data;
+    return user;
+  } catch (error: any) {
+    console.error("Error fetching logged-in user data:", error.response?.data || error.message);
     return null;
   }
 }
 
 export const logoutAccount = async () => {
   try {
-    const { account } = await createSessionClient();
+    // Remove tokens from cookies
+    cookies().delete('access_token');
+    cookies().delete('refresh_token');
 
-    cookies().delete('appwrite-session');
-
-    await account.deleteSession('current');
+    // Optionally notify the server to invalidate the token
   } catch (error) {
+    console.error('Error during logout:', error);
     return null;
   }
-}
+};
 
 export const createLinkToken = async (user: User) => {
   try {
@@ -137,7 +159,7 @@ export const createLinkToken = async (user: User) => {
       user: {
         client_user_id: user.$id
       },
-      client_name: `${user.firstName} ${user.lastName}`,
+      client_name: `${user.first_name} ${user.last_name}`,
       products: ['auth'] as Products[],
       language: 'en',
       country_codes: ['US'] as CountryCode[],
@@ -213,24 +235,24 @@ export const exchangePublicToken = async ({
     const processorToken = processorTokenResponse.data.processor_token;
 
      // Create a funding source URL for the account using the Dwolla customer ID, processor token, and bank name
-     const fundingSourceUrl = await addFundingSource({
-      dwollaCustomerId: user.dwollaCustomerId,
-      processorToken,
-      bankName: accountData.name,
-    });
+    //  const fundingSourceUrl = await addFundingSource({
+    //   dwollaCustomerId: user.dwollaCustomerId,
+    //   processorToken,
+    //   bankName: accountData.name,
+    // });
     
     // If the funding source URL is not created, throw an error
-    if (!fundingSourceUrl) throw Error;
+    // if (!fundingSourceUrl) throw Error;
 
     // Create a bank account using the user ID, item ID, account ID, access token, funding source URL, and shareableId ID
-    await createBankAccount({
-      userId: user.$id,
-      bankId: itemId,
-      accountId: accountData.account_id,
-      accessToken,
-      fundingSourceUrl,
-      shareableId: encryptId(accountData.account_id),
-    });
+    // await createBankAccount({
+    //   userId: user.$id,
+    //   bankId: itemId,
+    //   accountId: accountData.account_id,
+    //   accessToken,
+    //   fundingSourceUrl,
+    //   shareableId: encryptId(accountData.account_id),
+    // });
 
     // Revalidate the path to reflect the changes
     revalidatePath("/");

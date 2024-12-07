@@ -8,16 +8,15 @@ import { getLoggedInUser } from '@/lib/actions/user.actions';
 const Home = async ({ searchParams: { id, page } }: SearchParamProps) => {
   const currentPage = Number(page as string) || 1;
   const loggedIn = await getLoggedInUser();
-  const accounts = await getAccounts({ 
-    userId: loggedIn.$id 
-  })
 
-  if(!accounts) return;
-  
+  const accounts = await getAccounts()
   const accountsData = accounts?.data;
-  const appwriteItemId = (id as string) || accountsData[0]?.appwriteItemId;
+  const firstAccountId = accountsData && accountsData.length > 0 ? accountsData[0]?.id : null;
 
-  const account = await getAccount({ appwriteItemId })
+  // Fetch details of the first account if the ID is present
+  const account = firstAccountId ? await getAccount() : { transactions: [] }; 
+
+ 
 
   return (
     <section className="home">
@@ -26,7 +25,7 @@ const Home = async ({ searchParams: { id, page } }: SearchParamProps) => {
           <HeaderBox 
             type="greeting"
             title="Welcome"
-            user={loggedIn?.firstName || 'Guest'}
+            user={loggedIn?.first_name || 'Guest'}
             subtext="Access and manage your account and transactions efficiently."
           />
 
@@ -40,7 +39,6 @@ const Home = async ({ searchParams: { id, page } }: SearchParamProps) => {
         <RecentTransactions 
           accounts={accountsData}
           transactions={account?.transactions}
-          appwriteItemId={appwriteItemId}
           page={currentPage}
         />
       </div>
