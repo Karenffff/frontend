@@ -4,6 +4,7 @@ import { ID, Query } from "node-appwrite";
 import { createAdminClient, createSessionClient } from "../appwrite";
 import { cookies } from "next/headers";
 import api from '../axiosInstance';
+import { login, getProfile } from './api';
 import { encryptId, extractCustomerIdFromUrl, parseStringify } from "../utils";
 import { CountryCode, ProcessorTokenCreateRequest, ProcessorTokenCreateRequestProcessorEnum, Products } from "plaid";
 import { redirect } from "next/navigation";
@@ -11,43 +12,21 @@ import { plaidClient } from '@/lib/plaid';
 import { revalidatePath } from "next/cache";
 // import { addFundingSource, createDwollaCustomer } from "./dwolla.actions";
 
-const {
-  APPWRITE_DATABASE_ID: DATABASE_ID,
-  APPWRITE_USER_COLLECTION_ID: USER_COLLECTION_ID,
-  APPWRITE_BANK_COLLECTION_ID: BANK_COLLECTION_ID,
-} = process.env;
-
-export const getUserInfo = async ({ userId }: getUserInfoProps) => {
-  try {
-    const { database } = await createAdminClient();
-
-    const user = await database.listDocuments(
-      DATABASE_ID!,
-      USER_COLLECTION_ID!,
-      [Query.equal('userId', [userId])]
-    )
-
-    return parseStringify(user.documents[0]);
-  } catch (error) {
-    console.log(error)
-  }
+export interface SignInProps {
+  email: string;
+  password: string;
 }
 
-export const signIn = async ({ email, password }: signInProps) => {
-  try {
-    // Step 1: Authenticate user with DRF login endpoint
-    const loginResponse = await api.post('/login/', {
-      email,
-      password,
-    });
 
-    if (!loginResponse.data || !loginResponse.data.access) {
+
+export const signIn = async ({ email, password }: SignInProps) => {
+  try {
+    const { access, refresh } = await login(email, password);
+
+    if (!access || !refresh) {
       throw new Error('Invalid login credentials.');
     }
 
-    const { access, refresh } = loginResponse.data;
-
-    // Step 2: Save tokens in server cookies
     cookies().set("access_token", access, {
       path: "/",
       httpOnly: true,
@@ -62,20 +41,24 @@ export const signIn = async ({ email, password }: signInProps) => {
       secure: true,
     });
 
-    // Step 3: Retrieve user information from DRF profile endpoint
-    const profileResponse = await api.get('/profile/', {
-      headers: {
-        Authorization: `Bearer ${access}`,
-      },
-    });
+    const user = await getProfile(access);
 
-    const user = profileResponse.data;
-
-    console.log("User signed in successfully:", user);
-    return user;
+    return { success: true, user };
   } catch (error: any) {
-    console.error("Error during sign-in:", error.response?.data || error.message);
-    throw error; // Re-throw error for higher-level handling
+    if (error.response) {
+      const { status, data } = error.response;
+      switch (status) {
+        case 400:
+          return { success: false, error: 'Invalid email or password.' };
+        case 401:
+            return { success: false, error: 'Your account has been blocked. Please contact support.' };
+        case 429:
+          return { success: false, error: 'Too many login attempts. Please try again later.' };
+        default:
+          return { success: false, error: data.detail || 'An error occurred during sign-in.' };
+      }
+    }
+    return { success: false, error: 'An unexpected error occurred. Please try again.' };
   }
 };
 
@@ -114,9 +97,8 @@ export const signUp = async ({ password, ...userData }: SignUpParams) => {
   }
 };
 
-export async function getLoggedInUser() {
+export const getLoggedInUser = async () => {
   try {
-    // Access the cookies on the server
     const cookieStore = cookies();
     const accessToken = cookieStore.get("access_token")?.value;
 
@@ -124,20 +106,13 @@ export async function getLoggedInUser() {
       return null;
     }
 
-    // Call Django's profile endpoint with the access token
-    const response = await api.get('/profile/', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    const user = response.data;
+    const user = await getProfile(accessToken);
     return user;
   } catch (error: any) {
     console.error("Error fetching logged-in user data:", error.response?.data || error.message);
     return null;
   }
-}
+};
 
 export const logoutAccount = async () => {
   try {
@@ -172,36 +147,7 @@ export const createLinkToken = async (user: User) => {
   }
 }
 
-export const createBankAccount = async ({
-  userId,
-  bankId,
-  accountId,
-  accessToken,
-  fundingSourceUrl,
-  shareableId,
-}: createBankAccountProps) => {
-  try {
-    const { database } = await createAdminClient();
 
-    const bankAccount = await database.createDocument(
-      DATABASE_ID!,
-      BANK_COLLECTION_ID!,
-      ID.unique(),
-      {
-        userId,
-        bankId,
-        accountId,
-        accessToken,
-        fundingSourceUrl,
-        shareableId,
-      }
-    )
-
-    return parseStringify(bankAccount);
-  } catch (error) {
-    console.log(error);
-  }
-}
 
 export const exchangePublicToken = async ({
   publicToken,
@@ -265,52 +211,4 @@ export const exchangePublicToken = async ({
   }
 }
 
-export const getBanks = async ({ userId }: getBanksProps) => {
-  try {
-    const { database } = await createAdminClient();
 
-    const banks = await database.listDocuments(
-      DATABASE_ID!,
-      BANK_COLLECTION_ID!,
-      [Query.equal('userId', [userId])]
-    )
-
-    return parseStringify(banks.documents);
-  } catch (error) {
-    console.log(error)
-  }
-}
-
-export const getBank = async ({ documentId }: getBankProps) => {
-  try {
-    const { database } = await createAdminClient();
-
-    const bank = await database.listDocuments(
-      DATABASE_ID!,
-      BANK_COLLECTION_ID!,
-      [Query.equal('$id', [documentId])]
-    )
-
-    return parseStringify(bank.documents[0]);
-  } catch (error) {
-    console.log(error)
-  }
-}
-
-export const getBankByAccountId = async ({ accountId }: getBankByAccountIdProps) => {
-  try {
-    const { database } = await createAdminClient();
-
-    const bank = await database.listDocuments(
-      DATABASE_ID!,
-      BANK_COLLECTION_ID!,
-      [Query.equal('accountId', [accountId])]
-    )
-
-    if(bank.total !== 1) return null;
-
-    return parseStringify(bank.documents[0]);
-  } catch (error) {
-    console.log(error)
-  }
-}

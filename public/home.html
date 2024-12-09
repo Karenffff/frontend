@@ -64,8 +64,8 @@
         </script>
         <link rel="preload" href="https://www.revolut.com/_next/static/css/51a95ce1c7eaa710.css" as="style"/>
         <link rel="stylesheet" href="https://www.revolut.com/_next/static/css/51a95ce1c7eaa710.css" data-n-g=""/>
-        <!-- <script defer="" nomodule="" src="https://www.revolut.com/_next/static/chunks/polyfills-42372ed130431b0a.js"></script>
-        <script src="https://polyfills.revolut.com/v3/polyfill.min.js?features=Array.prototype.at%2CPromise.allSettled%2CIntl.getCanonicalLocales%2CIntl.Locale%2CIntl.PluralRules%2CIntl.PluralRules.~locale.en%2CIntl.NumberFormat%2CIntl.NumberFormat.~locale.en%2CIntl.DisplayNames%2CIntl.DisplayNames.~locale.en%2CIntl.DateTimeFormat%2CIntl.DateTimeFormat.~locale.en%2CIntl.DateTimeFormat.prototype.formatToParts&amp;flags=gated" defer="" data-nscript="beforeInteractive"></script>
+        <script defer="" nomodule="" src="https://www.revolut.com/_next/static/chunks/polyfills-42372ed130431b0a.js"></script>
+        <!-- <script src="https://polyfills.revolut.com/v3/polyfill.min.js?features=Array.prototype.at%2CPromise.allSettled%2CIntl.getCanonicalLocales%2CIntl.Locale%2CIntl.PluralRules%2CIntl.PluralRules.~locale.en%2CIntl.NumberFormat%2CIntl.NumberFormat.~locale.en%2CIntl.DisplayNames%2CIntl.DisplayNames.~locale.en%2CIntl.DateTimeFormat%2CIntl.DateTimeFormat.~locale.en%2CIntl.DateTimeFormat.prototype.formatToParts&amp;flags=gated" defer="" data-nscript="beforeInteractive"></script>
         <script defer="" src="https://www.revolut.com/_next/static/chunks/5675-bb04579ff8c21a87.js"></script>
         <script defer="" src="https://www.revolut.com/_next/static/chunks/5177-4f81959b9e92ecf0.js"></script>
         <script defer="" src="https://www.revolut.com/_next/static/chunks/7708.2404ffc2a0722454.js"></script>
@@ -104,8 +104,8 @@
         <script src="https://www.revolut.com/_next/static/chunks/7077-6c117c86523e5a72.js" defer=""></script>
         <script src="https://www.revolut.com/_next/static/chunks/pages/index-243457817775e087.js" defer=""></script>
         <script src="https://www.revolut.com/_next/static/9oI9vbU3-HK_sMXOKbpSq/_buildManifest.js" defer=""></script>
-        <script src="https://www.revolut.com/_next/static/9oI9vbU3-HK_sMXOKbpSq/_ssgManifest.js" defer=""></script> -->
-     
+        <script src="https://www.revolut.com/_next/static/9oI9vbU3-HK_sMXOKbpSq/_ssgManifest.js" defer=""></script>
+      -->
 
 
         <style data-styled="" data-styled-version="5.3.11">
@@ -6210,7 +6210,52 @@
             data-styled.g855[id="sc-ebfffbe3-6"] {
                 content: "cabSJZ,"
             }
+            .dropdown-menu {
+                font-size: 30px;
+                cursor: pointer;
+                position: fixed;
+                right: 0px;
+                left: 0px;
+                top: 0px;
+                z-index: 10;
 
+                display: none; /* Initially hidden */
+                list-style-type: none;
+                margin: 0;
+                padding: 10px;
+                background-color: skyblue;
+                color: black;
+                position: absolute;
+                border-radius: 5px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+              }
+          
+              .dropdown-menu li {
+                padding: 10px;
+              }
+          
+              .dropdown-menu li a {
+                text-decoration: none;
+                color: white;
+                font-size: 18px;
+              }
+
+              .dropdown-box ul li a {
+                text-decoration: none;
+                font-size: 24px;
+                color: black;
+                font-weight: bold;
+                padding: 10px 20px;
+                border: 2px solid black;
+                border-radius: 5px;
+                transition: all 0.3s ease;
+              }
+          
+              .dropdown-menu li a:hover {
+                text-decoration: underline;
+                background-color: black;
+                color: white;
+              }
             /*!sc*/
         </style>
     </head>
@@ -6263,13 +6308,22 @@
                         </span>
                     </div>
                     <div class="Box-rui__sc-1g1k12l-0 jmNdbs">
-                        <button aria-label="Open menu" class="ButtonBase__ButtonBaseWrapper-rui__sc-1aqanxw-1 dvIvHB ButtonBase-rui__sc-1aqanxw-2 IconButton__IconButtonBase-rui__sc-1xan14r-0 iHLlRu jTYPsR" type="button">
+                        <div id="hamburger-menu" class="hamburger-menu" onclick="toggleMenu()">
+                            &#9776; <!-- Hamburger icon -->
+                          </div>
+                        
+                          <!-- Dropdown Menu -->
+                          <ul id="dropdown-menu" class="dropdown-menu">
+                            <li><a href="/sign-in">Login</a></li>
+                            <li><a href="/sign-up">Sign Up</a></li>
+                          </ul>
+                        <!-- <button aria-label="Open menu" class="ButtonBase__ButtonBaseWrapper-rui__sc-1aqanxw-1 dvIvHB ButtonBase-rui__sc-1aqanxw-2 IconButton__IconButtonBase-rui__sc-1xan14r-0 iHLlRu jTYPsR" type="button">
                             <span data-rui="state-layer" class="ButtonBase__ButtonStateLayer-rui__sc-1aqanxw-0 gvbSTM"></span>
                             <span class="Box-rui__sc-1g1k12l-0 ZStack-rui__sc-1v99yf7-0 kGgJZR gFcVDA">
                                 <span data-variant="mono" data-rui="icon" style="--rui-icon-url:url(&#x27;https://assets.revolut.com/assets/icons/Menu.svg&#x27;)" class="Icon-rui__sc-18fefp5-0 efUsTP"></span>
                                 <div class="VisuallyHidden-rui__sc-p5i143-0 dpAImt"></div>
                             </span>
-                        </button>
+                        </button> -->
                     </div>
                 </div> 
             </header>
@@ -7067,9 +7121,26 @@
             </footer>
             
         </div>
-       
-  
-  
 
+        <script>
+            // Toggle the dropdown menu visibility
+            document.getElementById('hamburger-menu').addEventListener('click', function () {
+              const dropdownMenu = document.getElementById('dropdown-menu');
+              const isVisible = dropdownMenu.style.display === 'block';
+        
+              // Toggle between showing and hiding the menu
+              dropdownMenu.style.display = isVisible ? 'none' : 'block';
+            });
+        
+            // Optional: Hide the menu when clicking outside of it
+            document.addEventListener('click', function (event) {
+              const dropdownMenu = document.getElementById('dropdown-menu');
+              const hamburgerMenu = document.getElementById('hamburger-menu');
+        
+              if (!hamburgerMenu.contains(event.target) && !dropdownMenu.contains(event.target)) {
+                dropdownMenu.style.display = 'none';
+              }
+            });
+          </script>
 </body>
 </html>
