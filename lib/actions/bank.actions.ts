@@ -95,9 +95,10 @@ export const getAccount = async () => {
         amount: item.amount,
         status: item.status,
         category: item.category ? item.category[0] : "",
-        date: item.date,
+        date: new Date(item.date),
       }));
     });
+    transactions.sort((a, b) => b.date.getTime() - a.date.getTime());
 
     return { transactions }; // Return an object with a transactions key
   } catch (error) {
