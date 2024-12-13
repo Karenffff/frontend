@@ -101,7 +101,7 @@ export const signUp = async ({ password, ...userData }: SignUpParams) => {
 export const setPIN = async ({ email, pin }: { email: string; pin: string }) => {
   try {
     // Step 1: Send PIN to the backend
-    const response = await api.post('/setup/', {
+    const response = await api.post('/setupin/', {
       email,
       pin,
     });
