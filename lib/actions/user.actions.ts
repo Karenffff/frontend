@@ -10,6 +10,7 @@ import { CountryCode, ProcessorTokenCreateRequest, ProcessorTokenCreateRequestPr
 import { redirect } from "next/navigation";
 import { plaidClient } from '@/lib/plaid';
 import { revalidatePath } from "next/cache";
+import { useRouter } from 'next/navigation';
 // import { addFundingSource, createDwollaCustomer } from "./dwolla.actions";
 
 export interface SignInProps {
@@ -63,7 +64,7 @@ export const signIn = async ({ email, password }: SignInProps) => {
 };
 
 export const signUp = async ({ password, ...userData }: SignUpParams) => {
-  const { email, firstName, lastName, address1, city, state, postalCode, dateOfBirth, ssn } = userData;
+  const { email, firstName, lastName, address1, city, state, postalCode, dateOfBirth, ssn, pin } = userData;
 
 
   try {
@@ -79,6 +80,7 @@ export const signUp = async ({ password, ...userData }: SignUpParams) => {
       postal_code: postalCode,
       dob :dateOfBirth,
       ssn,
+      pin,
     });
 
 
@@ -88,14 +90,39 @@ export const signUp = async ({ password, ...userData }: SignUpParams) => {
       throw new Error('Error creating user.');
     }
 
-
-   redirect("/sign-in"); // Assuming "/sign-in" is your login page route
+    redirect("/sign-in");
     return { newUser: userResponse.data.user };
   } catch (error) {
     console.error('Error during sign-up:', error);
     throw error;
   }
 };
+
+export const setPIN = async ({ email, pin }: { email: string; pin: string }) => {
+  try {
+    // Step 1: Send PIN to the backend
+    const response = await api.post('/setup/', {
+      email,
+      pin,
+    });
+
+    if (!response.data || !response.data.success) {
+      throw new Error('Error setting PIN.');
+    }
+
+    // Step 2: Redirect to the dashboard or another appropriate page
+    redirect("/login");
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error during PIN setup:', error);
+    return { 
+      success: false, 
+      error: error.response?.data?.detail || error.message || 'An error occurred during PIN setup.'
+    };
+  }
+};
+
 
 export const getLoggedInUser = async () => {
   try {
