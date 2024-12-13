@@ -111,7 +111,7 @@ export const setPIN = async ({ email, pin }: { email: string; pin: string }) => 
     }
 
     // Step 2: Redirect to the dashboard or another appropriate page
-    redirect("/login");
+    
     
     return { success: true };
   } catch (error: any) {
