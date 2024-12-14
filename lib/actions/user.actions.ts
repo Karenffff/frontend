@@ -154,6 +154,44 @@ export const logoutAccount = async () => {
   }
 };
 
+export async function updateUserProfile(data: {
+  first_name: string;
+  last_name: string;
+  email: string;
+  address: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  ssn:string;
+}) {
+  try {
+    const cookieStore = cookies();
+    const accessToken = cookieStore.get("access_token")?.value;
+
+    if (!accessToken) {
+      throw new Error("User not authenticated");
+    }
+
+    const response = await api.patch('/profile/', data, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    });
+
+    if (!response.data) {
+      throw new Error('Error updating user profile.');
+    }
+
+    // Revalidate the settings page to reflect the changes
+    revalidatePath('/settings');
+
+    return { success: true, user: response.data };
+  } catch (error: any) {
+    console.error("Error updating user profile:", error.response?.data || error.message);
+    return { success: false, error: error.response?.data?.detail || error.message || 'An error occurred while updating the profile.' };
+  }
+}
+
 export const createLinkToken = async (user: User) => {
   try {
     const tokenParams = {

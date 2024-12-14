@@ -1,3 +1,5 @@
+import { Home, BarChart2, Settings } from 'lucide-react'
+
 export const sidebarLinks = [
   {
     imgURL: "/icons/home.svg",
@@ -18,6 +20,11 @@ export const sidebarLinks = [
     imgURL: "/icons/money-send.svg",
     route: "/payment-transfer",
     label: "Transfer Funds",
+  },
+  {
+    imgURL: "/icons/settingsg.svg",
+    route: "/settings",
+    label: "settings",
   },
 ];
 
