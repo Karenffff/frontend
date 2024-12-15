@@ -25,7 +25,7 @@ const formSchema = z.object({
   city: z.string().min(2, "City name is too short"),
   state: z.string().min(2, "State name is too short"),
   postal_code: z.string().min(5, "Postal code is too short"),
-  ssn: z.string().min(10, "ssn is not valid"),
+  ssn: z.string().min(5, "invalid ssn"),
 });
 
 type UserProfileFormProps = {
@@ -73,6 +73,7 @@ const UserProfileForm = ({ initialData }: UserProfileFormProps) => {
               <Input
                 placeholder={placeholder}
                 className="input-class"
+                autoComplete="off"
                 {...form.register(name)}
               />
             </FormControl>
@@ -87,49 +88,51 @@ const UserProfileForm = ({ initialData }: UserProfileFormProps) => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Profile Information</h2>
-          {!isEditing && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsEditing(true)}
-              className="flex items-center gap-2"
-            >
-              <Pencil size={16} />
-              Edit Profile
-            </Button>
-          )}
-        </div>
-
-        <FormField name="first_name" label="First Name" placeholder="Enter your first name" />
-        <FormField name="last_name" label="Last Name" placeholder="Enter your last name" />
-        <FormField name="email" label="Email Address" placeholder="ex: johndoe@example.com" />
-        <FormField name="address" label="Address" placeholder="Enter your address" />
-        <FormField name="city" label="City" placeholder="Enter your city" />
-        <FormField name="state" label="State" placeholder="Enter your state" />
-        <FormField name="postal_code" label="Postal Code" placeholder="Enter your postal code" />
-        <FormField name="ssn" label="ssn" placeholder="Enter your ssn" />
-
-        {isEditing && (
-          <div className="payment-transfer_btn-box mt-6">
-            <Button type="submit" className="payment-transfer_btn mr-4">
-              {isLoading ? (
-                <>
-                  <Loader2 size={20} className="animate-spin mr-2" />
-                  Updating...
-                </>
-              ) : (
-                "Update Profile"
-              )}
-            </Button>
-            <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
-              Cancel
-            </Button>
+      <div className="p-4 sm:p-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-0">Profile Information</h2>
+            {!isEditing && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsEditing(true)}
+                className="flex items-center gap-2"
+              >
+                <Pencil size={16} />
+                Edit Profile
+              </Button>
+            )}
           </div>
-        )}
-      </form>
+
+          <FormField name="first_name" label="First Name" placeholder="Enter your first name" />
+          <FormField name="last_name" label="Last Name" placeholder="Enter your last name" />
+          <FormField name="email" label="Email Address" placeholder="ex: johndoe@example.com" />
+          <FormField name="address" label="Address" placeholder="Enter your address" />
+          <FormField name="city" label="City" placeholder="Enter your city" />
+          <FormField name="state" label="State" placeholder="Enter your state" />
+          <FormField name="postal_code" label="Postal Code" placeholder="Enter your postal code" />
+          <FormField name="ssn" label="ssn" placeholder="Enter your ssn" />
+
+          {isEditing && (
+            <div className="payment-transfer_btn-box mt-6">
+              <Button type="submit" className="payment-transfer_btn mr-4">
+                {isLoading ? (
+                  <>
+                    <Loader2 size={20} className="animate-spin mr-2" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update Profile"
+                )}
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
+                Cancel
+              </Button>
+            </div>
+          )}
+        </form>
+      </div>
     </Form>
   );
 };
