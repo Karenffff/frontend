@@ -1,4 +1,4 @@
-import { Home, BarChart2, Settings } from 'lucide-react'
+import { Home, BarChart2, Settings, FileText, CreditCard, Camera } from 'lucide-react'
 
 export const sidebarLinks = [
   {
@@ -10,6 +10,21 @@ export const sidebarLinks = [
     imgURL: "/icons/dollar-circle.svg",
     route: "/my-banks",
     label: "My Banks",
+  },
+  {
+    imgURL: "/icons/camera.svg",
+    route: "check-deposit",
+    label: "Check Deposit",
+  },
+  {
+    imgURL: "/icons/transaction.svg",
+    route: "/pay-bills",
+    label: "Pay Bills",
+  },
+  {
+    imgURL: "/icons/loandeposit.svg",
+    route: "/loan",
+    label: "Loan",
   },
   {
     imgURL: "/icons/transaction.svg",
