@@ -61,21 +61,31 @@ export default function AuthForm({ type }: { type: string }) {
           password: data.password
         };
 
-        const newUser = await signUp(userData);
-
+        const result = await signUp(userData)
+        if (result.success) {
+          setError(null)
+          // Show success message
+          const successMessage = "Registration successful! Please check your email to verify your account."
+          alert(successMessage) // You can replace this with a better UI component if available
+          // Redirect to sign-in page
+          router.push("/sign-in")
+        } else {
+          setError(result.error || "An error occurred during sign-up.")
+        }
       } else {
-        const result = await login(data.email, data.password);
+        const result = await login(data.email, data.password)
         if (!result.success) {
-          setError(result.error || 'An error occurred during sign-in.');
-        } 
+          setError(result.error || "An error occurred during sign-in.")
+        }
       }
     } catch (err) {
-      console.error("Error during authentication:", err);
-      setError('An unexpected error occurred. Please try again.');
+      console.error("Error during authentication:", err)
+      setError("An unexpected error occurred. Please try again.")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
+
 
   return (
     <section className="auth-form">
@@ -218,6 +228,13 @@ export default function AuthForm({ type }: { type: string }) {
             >
               {type === 'sign-in' ? 'Sign up' : 'Sign in'}
             </Link>
+            {type === "sign-in" && (
+            <div className="text-sm">
+              <Link href="/forgot-password" className="text-blue-600 hover:underline">
+                Forgot your password?
+              </Link>
+            </div>
+          )}
           </footer>
         </>
       )}

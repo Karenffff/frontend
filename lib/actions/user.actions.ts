@@ -53,6 +53,8 @@ export const signIn = async ({ email, password }: SignInProps) => {
           return { success: false, error: 'Invalid email or password.' };
         case 401:
             return { success: false, error: 'Your account has been blocked. Please contact support.' };
+        case 403:
+            return { success: false, error: "Email not verified. Please check your inbox." }
         case 429:
           return { success: false, error: 'Too many login attempts. Please try again later.' };
         default:
@@ -64,12 +66,12 @@ export const signIn = async ({ email, password }: SignInProps) => {
 };
 
 export const signUp = async ({ password, ...userData }: SignUpParams) => {
-  const { email, firstName, lastName, address1, city, state, postalCode, dateOfBirth, ssn, pin } = userData;
+  const { email, firstName, lastName, address1, city, state, postalCode, dateOfBirth, ssn, } = userData;
 
 
   try {
     // Step 1: Register the user
-    const userResponse = await api.post('/register/', {
+    const response = await api.post('/register/', {
       email,
       password,
       first_name: firstName,
@@ -80,23 +82,57 @@ export const signUp = async ({ password, ...userData }: SignUpParams) => {
       postal_code: postalCode,
       dob :dateOfBirth,
       ssn,
-      pin,
+      
     });
-
-
-    
-
-    if (!userResponse.data || !userResponse.data.user) {
-      throw new Error('Error creating user.');
+    if (response.status === 201) {
+      return {
+        success: true,
+        message: "User registered successfully. Please verify your email.",
+      }
+    } else {
+      throw new Error("Unexpected response from server")
     }
-
-    redirect("/sign-in");
-    return { newUser: userResponse.data.user };
-  } catch (error) {
-    console.error('Error during sign-up:', error);
-    throw error;
+  } catch (error: any) {
+    if (error.response) {
+      const { status, data } = error.response
+      return {
+        success: false,
+        error: data.detail || "An error occurred during sign-up.",
+      }
+    }
+    return {
+      success: false,
+      error: "An unexpected error occurred. Please try again.",
+    }
   }
-};
+}
+
+export const verifyEmail = async (uidb64: string, token: string) => {
+  try {
+    const response = await api.get(`/verify/${uidb64}/${token}/`)
+    if (response.status === 200) {
+      return {
+        success: true,
+        message: "Email successfully verified",
+      }
+    } else {
+      throw new Error("Unexpected response from server")
+    }
+  } catch (error: any) {
+    if (error.response) {
+      const { status, data } = error.response
+      return {
+        success: false,
+        error: data.error || "An error occurred during email verification.",
+      }
+    }
+    return {
+      success: false,
+      error: "An unexpected error occurred. Please try again.",
+    }
+  }
+}
+
 
 export const setPIN = async ({ email, pin }: { email: string; pin: string }) => {
   try {
@@ -276,4 +312,71 @@ export const exchangePublicToken = async ({
   }
 }
 
+export const resetPasswordRequest = async (email: string) => {
+  try {
+    const response = await api.post('/password-reset/', { email });
 
+    if (response.data.message) {
+      return { success: true, message: 'Password reset email has been sent.' };
+    } else {
+      return { success: false, error: 'Failed to send reset password email.' };
+    }
+  } catch (error: any) {
+    console.error('Error during password reset request:', error);
+    return { success: false, error: error.response?.data?.detail || error.message || 'An error occurred while sending the reset password request.' };
+  }
+};
+
+
+
+export const resetPassword = async (resetToken: string, newPassword: string,uuid: string) => {
+  try {
+    const response = await api.post('/password-reset/confirm/', {
+      reset_token: resetToken,
+      new_password: newPassword,
+      uidb64: uuid,
+    });
+
+    if (response.data.message) {
+      return { success: true, message: 'Password has been successfully reset.' };
+    } else {
+      return { success: false, error: 'Failed to reset the password.' };
+    }
+  } catch (error: any) {
+    console.error('Error during password reset:', error);
+    return { success: false, error: error.response?.data?.detail || error.message || 'An error occurred while resetting the password.' };
+  }
+};
+
+
+
+
+export const updateUserPassword = async (oldPassword: string, newPassword: string) => {
+  try {
+    const cookieStore = cookies();
+    const accessToken = cookieStore.get("access_token")?.value;
+
+    if (!accessToken) {
+      throw new Error("User not authenticated");
+    }
+
+    const response = await api.put(
+      "/api/update-password/",
+      { old_password: oldPassword, new_password: newPassword },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`, // Use token from cookies
+        },
+      }
+    );
+
+    console.log(response.data.message);
+    return { success: true, message: response.data.message };
+  } catch (error: any) {
+    console.error("Error updating password:", error.response?.data || error.message);
+    return { 
+      success: false, 
+      error: error.response?.data?.detail || error.response?.data || error.message || 'An error occurred while updating the password.' 
+    };
+  }
+};

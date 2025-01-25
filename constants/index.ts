@@ -17,6 +17,16 @@ export const sidebarLinks = [
     label: "Check Deposit",
   },
   {
+    imgURL: "/icons/money-send.svg",
+    route: "/payment-transfer",
+    label: "Transfer Funds",
+  },
+  // {
+  //   imgURL: "/icons/money-send.svg",
+  //   route: "/crypto-exchange",
+  //   label: "Crypto Exchange",
+  // },
+  {
     imgURL: "/icons/transaction.svg",
     route: "/pay-bills",
     label: "Pay Bills",
@@ -31,11 +41,7 @@ export const sidebarLinks = [
     route: "/transaction-history",
     label: "Transaction History",
   },
-  {
-    imgURL: "/icons/money-send.svg",
-    route: "/payment-transfer",
-    label: "Transfer Funds",
-  },
+
   {
     imgURL: "/icons/settingsg.svg",
     route: "/settings",

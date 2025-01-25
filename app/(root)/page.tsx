@@ -2,6 +2,7 @@ import HeaderBox from '@/components/HeaderBox'
 import RecentTransactions from '@/components/RecentTransactions';
 import RightSidebar from '@/components/RightSidebar';
 import TotalBalanceBox from '@/components/TotalBalanceBox';
+import TradingViewChart from '@/components/TradingViewChart';
 import { getAccount, getAccounts } from '@/lib/actions/bank.actions';
 import { getLoggedInUser } from '@/lib/actions/user.actions';
 
@@ -41,7 +42,14 @@ const Home = async ({ searchParams: { id, page } }: SearchParamProps) => {
           transactions={account?.transactions}
           page={currentPage}
         />
+
+        
+      <div className="mt-8 bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-2xl font-semibold mb-4">Market Overview</h2>
+          <TradingViewChart symbol="BTCUSD" theme="light" />
+        </div>
       </div>
+
 
       <RightSidebar 
         user={loggedIn}

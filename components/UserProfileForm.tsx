@@ -1,122 +1,243 @@
-"use client";
+"use client"
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Pencil } from 'lucide-react';
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { updateUserProfile } from "@/lib/actions/user.actions";
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Loader2 } from "lucide-react"
+import { useState } from "react"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
+import { updateUserProfile, updateUserPassword } from "@/lib/actions/user.actions"
+import { Button } from "@/components/ui/button"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
 
-const formSchema = z.object({
+const profileSchema = z.object({
   first_name: z.string().min(2, "First name is too short"),
   last_name: z.string().min(2, "Last name is too short"),
   email: z.string().email("Invalid email address"),
-  address: z.string().min(5, "Address is too short"),
-  city: z.string().min(2, "City name is too short"),
-  state: z.string().min(2, "State name is too short"),
-  postal_code: z.string().min(5, "Postal code is too short"),
-  ssn: z.string().min(5, "invalid ssn"),
-});
+  address: z.string().min(2, "Enter a valid address"),
+  city: z.string().min(2, "Enter a valid city"),
+  state: z.string().min(2, "Enter a valid state"),
+  ssn: z.string().min(4, "SSN is too short"),
+  postal_code: z.string().min(5, "Enter a valid postal code"),
+  date_of_birth: z.string().min(1, "Date of birth is required"),
+})
+
+const passwordSchema = z
+  .object({
+    old_password: z.string().min(6, "Password must be at least 6 characters"),
+    new_password: z.string().min(6, "Password must be at least 6 characters"),
+    confirm_password: z.string().min(6, "Password must be at least 6 characters"),
+  })
+  .refine((data) => data.new_password === data.confirm_password, {
+    message: "Passwords don't match",
+    path: ["confirm_password"],
+  })
 
 type UserProfileFormProps = {
-  initialData: z.infer<typeof formSchema>;
-};
+  initialData: z.infer<typeof profileSchema>
+}
 
 const UserProfileForm = ({ initialData }: UserProfileFormProps) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("personal")
+  const [isLoading, setIsLoading] = useState(false)
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const profileForm = useForm<z.infer<typeof profileSchema>>({
+    resolver: zodResolver(profileSchema),
     defaultValues: initialData,
-  });
+  })
 
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    setIsLoading(true);
+  const passwordForm = useForm<z.infer<typeof passwordSchema>>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
+      old_password: "",
+      new_password: "",
+      confirm_password: "",
+    },
+  })
+
+  const onProfileSubmit = async (data: z.infer<typeof profileSchema>) => {
+    setIsLoading(true)
     try {
-      const result = await updateUserProfile(data);
+      const result = await updateUserProfile(data)
       if (result.success) {
-        console.log("Profile updated successfully");
-        setIsEditing(false);
-        // You might want to show a success message to the user here
+        console.log("Profile updated successfully")
       } else {
-        console.error("Failed to update profile:", result.error);
-        // You might want to show an error message to the user here
+        console.error("Failed to update profile:", result.error)
       }
     } catch (error) {
-      console.error("Error updating profile:", error);
-      // You might want to show an error message to the user here
+      console.error("Error updating profile:", error)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
-  const FormField = ({ name, label, placeholder }: { name: keyof z.infer<typeof formSchema>, label: string, placeholder: string }) => (
-    <FormItem className="border-t border-gray-200">
-      <div className="payment-transfer_form-item py-5">
-        <FormLabel className="text-14 w-full max-w-[280px] font-medium text-gray-700">
-          {label}
-        </FormLabel>
-        <div className="flex w-full flex-col">
-          {isEditing ? (
-            <FormControl>
-              <Input
-                placeholder={placeholder}
-                className="input-class"
-                autoComplete="off"
-                {...form.register(name)}
-              />
-            </FormControl>
-          ) : (
-            <div className="text-14 text-gray-900">{form.getValues(name)}</div>
-          )}
-          <FormMessage className="text-12 text-red-500" />
-        </div>
-      </div>
-    </FormItem>
-  );
+  // const onPasswordSubmit = async (data: z.infer<typeof passwordSchema>) => {
+  //   setIsLoading(true)
+  //   try {
+  //     const result = await updateUserPassword(data)
+  //     if (result.success) {
+  //       console.log("Password updated successfully")
+  //       passwordForm.reset()
+  //     } else {
+  //       console.error("Failed to update password:", result.error)
+  //     }
+  //   } catch (error) {
+  //     console.error("Error updating password:", error)
+  //   } finally {
+  //     setIsLoading(false)
+  //   }
+  // }
 
   return (
-    <Form {...form}>
-      <div className="p-4 sm:p-6">
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-0">Profile Information</h2>
-            {!isEditing && (
+    <div className="w-full max-w-4xl mx-auto p-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-4 w-full">
+          <TabsTrigger value="personal" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            Personal Settings
+          </TabsTrigger>
+          {/* <TabsTrigger value="withdrawal">Withdrawal Settings</TabsTrigger> */}
+          {/* <TabsTrigger value="security" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            Password/Security
+          </TabsTrigger> */}
+          {/* <TabsTrigger value="other">Other Settings</TabsTrigger> */}
+        </TabsList>
+
+        <TabsContent value="personal" className="mt-8">
+          <Form {...profileForm}>
+            <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-6">
+              <FormField
+                control={profileForm.control}
+                name="first_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold">First Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} className="h-12" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={profileForm.control}
+                name="last_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold">Last Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} className="h-12" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={profileForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold">Email Address</FormLabel>
+                    <FormControl>
+                      <Input {...field} disabled className="h-12 bg-gray-100" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={profileForm.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold">Address</FormLabel>
+                    <FormControl>
+                      <Input {...field} className="h-12" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={profileForm.control}
+                name="city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold">City</FormLabel>
+                    <FormControl>
+                      <Input {...field} className="h-12" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={profileForm.control}
+                name="state"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold">State</FormLabel>
+                    <FormControl>
+                      <Input {...field} className="h-12" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={profileForm.control}
+                name="ssn"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold">SSN</FormLabel>
+                    <FormControl>
+                      <Input {...field} className="h-12" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={profileForm.control}
+                name="postal_code"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold">Postal Code</FormLabel>
+                    <FormControl>
+                      <Input {...field} className="h-12" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={profileForm.control}
+                name="date_of_birth"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold">Date of Birth</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="date" className="h-12" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsEditing(true)}
-                className="flex items-center gap-2"
+                type="submit"
+                className="w-auto px-8 h-12 bg-blue-600 hover:bg-blue-700 text-white"
+                disabled={isLoading}
               >
-                <Pencil size={16} />
-                Edit Profile
-              </Button>
-            )}
-          </div>
-
-          <FormField name="first_name" label="First Name" placeholder="Enter your first name" />
-          <FormField name="last_name" label="Last Name" placeholder="Enter your last name" />
-          <FormField name="email" label="Email Address" placeholder="ex: johndoe@example.com" />
-          <FormField name="address" label="Address" placeholder="Enter your address" />
-          <FormField name="city" label="City" placeholder="Enter your city" />
-          <FormField name="state" label="State" placeholder="Enter your state" />
-          <FormField name="postal_code" label="Postal Code" placeholder="Enter your postal code" />
-          <FormField name="ssn" label="ssn" placeholder="Enter your ssn" />
-
-          {isEditing && (
-            <div className="payment-transfer_btn-box mt-6">
-              <Button type="submit" className="payment-transfer_btn mr-4">
                 {isLoading ? (
                   <>
                     <Loader2 size={20} className="animate-spin mr-2" />
@@ -126,16 +247,76 @@ const UserProfileForm = ({ initialData }: UserProfileFormProps) => {
                   "Update Profile"
                 )}
               </Button>
-              <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
-                Cancel
-              </Button>
-            </div>
-          )}
-        </form>
-      </div>
-    </Form>
-  );
-};
+            </form>
+          </Form>
+        </TabsContent>
 
-export default UserProfileForm;
+        {/* <TabsContent value="security" className="mt-8">
+          <Form {...passwordForm}>
+            <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-6">
+              <FormField
+                control={passwordForm.control}
+                name="old_password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold">Old Password</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="password" className="h-12" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={passwordForm.control}
+                name="new_password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold">New Password</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="password" className="h-12" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={passwordForm.control}
+                name="confirm_password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold">Confirm New Password</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="password" className="h-12" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button
+                type="submit"
+                className="w-auto px-8 h-12 bg-blue-600 hover:bg-blue-700 text-white"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 size={20} className="animate-spin mr-2" />
+                    Updating Password...
+                  </>
+                ) : (
+                  "Update Password"
+                )}
+              </Button>
+            </form>
+          </Form>
+        </TabsContent> */}
+      </Tabs>
+    </div>
+  )
+}
+
+export default UserProfileForm
 
