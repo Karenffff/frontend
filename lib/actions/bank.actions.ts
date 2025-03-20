@@ -98,7 +98,7 @@ export const getAccount = async () => {
         date: new Date(item.date),
       }));
     });
-    transactions.sort((a, b) => b.date.getTime() - a.date.getTime());
+    transactions.sort((a: any, b: any) => b.date.getTime() - a.date.getTime());
 
     return { transactions }; // Return an object with a transactions key
   } catch (error) {
@@ -154,7 +154,7 @@ export async function createTransactionOnServer(transactionData: any) {
     if (!accessToken) {
     }
 
-    const response = await api.post("transactions/", transactionData, {
+    const response = await api.post("local-transfer/", transactionData, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -163,6 +163,52 @@ export async function createTransactionOnServer(transactionData: any) {
     return response.data;
   } catch (error) {
     console.error("Error creating transaction on server:", error);
+    throw error;
+  }
+}
+
+// Function to create a local transfer
+export async function createLocalTransfer(transactionData: any) {
+  try {
+    const cookieStore = cookies();
+    const accessToken = cookieStore.get("access_token")?.value;
+
+    if (!accessToken) {
+      throw new Error("Unauthorized: No access token found");
+    }
+
+    const response = await api.post("local-transfer/", transactionData, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error creating local transfer:", error);
+    throw error;
+  }
+}
+
+// Function to validate local transfer with OTP
+export async function validateLocalTransfer(transferId: number, otpCode: string) {
+  try {
+    const cookieStore = cookies();
+    const accessToken = cookieStore.get("access_token")?.value;
+
+    if (!accessToken) {
+      throw new Error("Unauthorized: No access token found");
+    }
+
+    const response = await api.post(`validate-local-transfer/${transferId}/`, { otp: otpCode }, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error validating local transfer OTP:", error);
     throw error;
   }
 }
