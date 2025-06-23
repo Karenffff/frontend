@@ -31,7 +31,7 @@ export default async function RootLayout({
       {/* Main content area */}
       <div className="flex-1 flex flex-col overflow-y-auto">
         {/* ✅ Hamburger visible ONLY on mobile */}
-        <div className="md:hidden p-4">
+        <div className="md:hidden pt-6 px-4">
           <MobileNav user={loggedIn} />
         </div>
 
