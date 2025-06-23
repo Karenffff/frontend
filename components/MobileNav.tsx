@@ -22,22 +22,16 @@ const MobileNav = ({ user }: { user: any }) => {
         <button className="p-2">
           <Image
             src="/icons/hamburger.svg"
-            width={30}
-            height={30}
-            alt="menu"
-            className="cursor-pointer"
+            width={24}
+            height={24}
+            alt="Menu"
           />
         </button>
       </SheetTrigger>
 
       <SheetContent side="left" className="bg-white w-[260px] px-4 py-6 border-none">
-        <Link href="/" className="flex items-center gap-2 mb-6">
-          <Image 
-            src="/icons/logo.svg"
-            width={34}
-            height={34}
-            alt="Logo"
-          />
+        <Link href="/" className="flex items-center gap-2 mb-8">
+          <Image src="/icons/logo.svg" width={34} height={34} alt="Logo" />
           <h1 className="text-2xl font-bold font-ibm-plex-serif text-black">BFCU</h1>
         </Link>
 
@@ -50,7 +44,7 @@ const MobileNav = ({ user }: { user: any }) => {
                   href={item.route}
                   className={cn(
                     "flex items-center gap-3 px-3 py-2 rounded-md",
-                    isActive ? "bg-bank-gradient text-white" : "hover:bg-gray-100"
+                    isActive ? "bg-blue-700 text-white" : "hover:bg-gray-100"
                   )}
                 >
                   <Image

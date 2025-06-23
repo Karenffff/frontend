@@ -30,7 +30,7 @@ export default async function RootLayout({
       {/* Main content area */}
       <div className="flex-1 flex flex-col overflow-y-auto relative">
         {/* Mobile top nav bar (fixed) */}
-        <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white flex items-center justify-between px-4 py-3 shadow-sm">
+        <div className="md:hidden fixed top-5 left-0 right-0 z-50 bg-white flex items-center justify-between px-4 py-3 shadow-sm">
           <div className="flex items-center gap-2">
             <img src="/icons/logo.svg" alt="Logo" className="w-8 h-8" />
             <h1 className="text-xl font-bold text-blue-700">BFCU</h1>
