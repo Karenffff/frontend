@@ -31,7 +31,7 @@ const MobileNav = ({ user }: { user: any }) => {
 
       <SheetContent side="left" className="bg-white w-[260px] px-4 py-6 border-none">
         <Link href="/" className="flex items-center gap-2 mb-8">
-          <Image src="/icons/logo.svg" width={34} height={34} alt="Logo" />
+          <Image src="/icons/logo.svg" width={24} height={24} alt="Logo" />
           <h1 className="text-2xl font-bold font-ibm-plex-serif text-black">BFCU</h1>
         </Link>
 
