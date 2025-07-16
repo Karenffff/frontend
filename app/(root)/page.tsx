@@ -20,9 +20,9 @@ const Home = async ({ searchParams: { id, page } }: SearchParamProps) => {
  
 
   return (
-    <section className="home">
-      <div className="home-content">
-        <header className="home-header">
+    <section className="flex flex-col gap-8 w-full">
+      <div className="flex flex-col gap-8">
+        <header className="flex flex-col gap-8">
           <HeaderBox 
             type="greeting"
             title="Welcome"
