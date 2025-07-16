@@ -22,14 +22,6 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 
-  .pl-safe-area-inset-left {
-    padding-left: env(safe-area-inset-left);
-  }
-
-  .pr-safe-area-inset-right {
-    padding-right: env(safe-area-inset-right);
-  }
-
   /* Prevent text size adjustment on iOS */
   html {
     -webkit-text-size-adjust: 100%;
@@ -55,23 +47,36 @@
     touch-action: manipulation;
   }
 
-  /* Mobile-specific height utilities */
-  .h-screen-mobile {
-    height: 100vh;
-    height: 100dvh; /* Dynamic viewport height */
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
   }
 
-  .min-h-screen-mobile {
-    min-height: 100vh;
-    min-height: 100dvh;
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
   }
 }
 
-/* Custom scrollbar for mobile */
+/* Mobile-specific improvements */
 @media (max-width: 768px) {
   ::-webkit-scrollbar {
     width: 0px;
     background: transparent;
+  }
+
+  /* Improve touch scrolling on mobile */
+  .overflow-auto {
+    -webkit-overflow-scrolling: touch;
   }
 }
 

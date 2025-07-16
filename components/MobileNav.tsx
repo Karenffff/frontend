@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import Footer from "./Footer"
+import { logoutAccount } from "@/lib/actions/user.actions"
 
 const MobileNav = ({ user }: { user: any }) => {
   const pathname = usePathname()
@@ -65,9 +65,31 @@ const MobileNav = ({ user }: { user: any }) => {
           </div>
         </nav>
 
-        {/* Footer with safe area */}
+        {/* User info and logout section */}
         <div className="px-4 py-4 pb-safe-area-inset-bottom border-t border-gray-100 mt-auto">
-          <Footer user={user} type="mobile" />
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+              <span className="text-blue-700 font-semibold text-sm">
+                {user?.firstName?.[0] || user?.name?.[0] || "U"}
+              </span>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-900">{user?.firstName || user?.name || "User"}</p>
+              <p className="text-xs text-gray-500">{user?.email || "user@example.com"}</p>
+            </div>
+          </div>
+
+          <SheetClose asChild>
+            <form action={logoutAccount} className="w-full">
+              <button
+                type="submit"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 transition-colors touch-manipulation"
+              >
+                <Image src="/icons/logout.svg" alt="Logout" width={20} height={20} className="w-5 h-5" />
+                <span className="text-base font-medium">Logout</span>
+              </button>
+            </form>
+          </SheetClose>
         </div>
       </SheetContent>
     </Sheet>
