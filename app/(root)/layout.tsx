@@ -22,12 +22,12 @@ export default async function RootLayout({
       </aside>
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden relative">
         {/* Mobile top nav bar (fixed with safe area support) */}
-        <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-          {/* Safe area padding for iOS */}
-          <div className="pt-safe-area-inset-top">
-            <div className="flex items-center justify-between px-4 py-3 h-16">
+        <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
+          {/* Safe area top padding for iOS */}
+          <div className="pt-safe-top">
+            <div className="flex items-center justify-between px-4 py-3">
               <div className="flex items-center gap-2">
                 <img src="/icons/logo.svg" alt="Logo" className="w-8 h-8" />
                 <h1 className="text-xl font-bold text-blue-700">BFCU</h1>
@@ -35,11 +35,11 @@ export default async function RootLayout({
               <MobileNav user={loggedIn} />
             </div>
           </div>
-        </header>
+        </div>
 
         {/* Page content with proper mobile header offset */}
-        <div className="flex-1 overflow-y-auto pt-[calc(env(safe-area-inset-top)+4rem)] md:pt-0">
-          <div className="px-4 md:p-6 pb-safe-area-inset-bottom min-h-full">{children}</div>
+        <div className="flex-1 overflow-y-auto">
+          <div className="pt-[calc(env(safe-area-inset-top)+4rem)] md:pt-0 px-4 md:p-6 pb-safe-bottom">{children}</div>
         </div>
       </div>
     </main>
