@@ -1,23 +1,17 @@
-import MobileNav from "@/components/MobileNav";
-import Sidebar from "@/components/Sidebar";
-import { getLoggedInUser } from "@/lib/actions/user.actions";
+import type React from "react"
+import MobileNav from "@/components/MobileNav"
+import Sidebar from "@/components/Sidebar"
+import { getLoggedInUser } from "@/lib/actions/user.actions"
 
 export default async function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
-  const loggedIn = await getLoggedInUser();
+  const loggedIn = await getLoggedInUser()
 
   if (!loggedIn) {
-    return (
-      <iframe
-        src="/home.html"
-        className="w-full h-screen"
-        title="Welcome Page"
-        style={{ border: "none" }}
-      />
-    );
+    return <iframe src="/home.html" className="w-full h-screen" title="Welcome Page" style={{ border: "none" }} />
   }
 
   return (
@@ -28,21 +22,26 @@ export default async function RootLayout({
       </aside>
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col overflow-y-auto relative">
-        {/* Mobile top nav bar (fixed) */}
-        <div className="md:hidden sticky top-5 left-0 right-0 z-50 bg-white flex items-center justify-between px-4 py-3 shadow-sm">
-          <div className="flex items-center gap-2">
-            <img src="/icons/logo.svg" alt="Logo" className="w-8 h-8" />
-            <h1 className="text-xl font-bold text-blue-700">BFCU</h1>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Mobile top nav bar (fixed with safe area support) */}
+        <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+          {/* Safe area padding for iOS */}
+          <div className="pt-safe-area-inset-top">
+            <div className="flex items-center justify-between px-4 py-3 h-16">
+              <div className="flex items-center gap-2">
+                <img src="/icons/logo.svg" alt="Logo" className="w-8 h-8" />
+                <h1 className="text-xl font-bold text-blue-700">BFCU</h1>
+              </div>
+              <MobileNav user={loggedIn} />
+            </div>
           </div>
-          <MobileNav user={loggedIn} />
-        </div>
+        </header>
 
-        {/* Page content (offset for fixed topbar) */}
-        <div className="pt-16 px-4 md:p-6">
-          {children}
+        {/* Page content with proper mobile header offset */}
+        <div className="flex-1 overflow-y-auto pt-[calc(env(safe-area-inset-top)+4rem)] md:pt-0">
+          <div className="px-4 md:p-6 pb-safe-area-inset-bottom min-h-full">{children}</div>
         </div>
       </div>
     </main>
-  );
+  )
 }
