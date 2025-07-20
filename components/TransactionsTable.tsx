@@ -56,14 +56,19 @@ const TransactionsTable = ({ transactions }: TransactionTableProps) => {
                   </h1>
                 </div>
               </TableCell>
+<TableCell
+  className={cn(
+    'pl-2 pr-10 font-semibold',
+    transactions.status === 'pending'
+      ? 'text-[#CA8A04]' // yellow
+      : isDebit || amount[0] === '-'
+      ? 'text-[#f04438]' // red
+      : 'text-[#039855]' // green
+  )}
+>
+  {isDebit ? `-${amount}` : isCredit ? amount : amount}
+</TableCell>
 
-              <TableCell className={`pl-2 pr-10 font-semibold ${
-                isDebit || amount[0] === '-' ?
-                  'text-[#f04438]'
-                  : 'text-[#039855]'
-              }`}>
-                {isDebit ? `-${amount}` : isCredit ? amount : amount}
-              </TableCell>
 
               <TableCell className="pl-2 pr-10">
                 {transactions.status}

@@ -69,7 +69,6 @@ const MobileNav = ({ user }: { user: any }) => {
             )
           })}
 
-          {/* 🔴 Logout Button */}
           <SheetClose asChild>
             <button
               onClick={handleLogout}
