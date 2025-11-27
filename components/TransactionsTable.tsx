@@ -59,7 +59,7 @@ const TransactionsTable = ({ transactions }: TransactionTableProps) => {
 <TableCell
   className={cn(
     'pl-2 pr-10 font-semibold',
-    transactions.status === 'pending'
+    transactions.status === 'processing'
       ? 'text-[#CA8A04]' // yellow
       : isDebit || amount[0] === '-'
       ? 'text-[#f04438]' // red
